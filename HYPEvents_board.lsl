@@ -1,6 +1,6 @@
 //
 // HYPEvents in-world teleporter board script
-// Version: 0.7
+// Version: 0.8
 // Author: Tom Frost <tomfrost@linkwater.org>
 // Additions: Gudule Lapointe <gudule@speculoos.world>
 //  - theme setttings are taken in account
@@ -13,9 +13,12 @@
 
 // configuration:
 
-// if set to true, show all events
-// if set to false, only show events that started at most 2 hours ago
+// if set to TRUE, show all events
+// if set to FALSE, only show events that started at most 2 hours ago
 integer showAll = FALSE;
+
+// if set to TRUE, warn owner when new version is available
+integer warnVersion = TRUE;
 
 // time (in seconds) between refreshing
 float refreshTime = 1800;
@@ -57,6 +60,23 @@ integer listenHandle;
 integer listening = 0;
 
 list avatarDestinations = [];
+
+string scriptVersion = "0.8";
+
+// return -1 if s1 is lexicographically before s2,
+//         1 if s2 is lexicographically before s1,
+//         0 if s1 is equal to s2
+// adaped from http://wiki.secondlife.com/wiki/String_Compare
+integer tfStrcmp(string s1, string s2)
+{
+    if (s1 == s2)
+        return 0;
+ 
+    if (s1 == llList2String(llListSort([s1, s2], 1, TRUE), 0))
+        return -1;
+ 
+    return 1;
+}
 
 //
 // manipulate global avatarDestinations list
@@ -249,9 +269,18 @@ default
     {
         if(status==200) {
             events = llParseString2List(body, ["\n"], []);
+            
+            string version = llList2String(events, 0);
+            events = llDeleteSubList(events, 0, 0);
+            
+            if(warnVersion && tfStrcmp(version, scriptVersion)!=0) {
+                llOwnerSay("You are running version " + scriptVersion + " but a newer version (" + version + ") is available.");
+                llOwnerSay("Head over to hypergrid.org:8002:Linkwater_South to get the latest version at the HYPEvents office.");
+            }
+            
             refreshTexture();
         } else {
-            llOwnerSay("Unable to fetch event.lsl, status: "+(string)status);
+            llOwnerSay("Unable to fetch event.lsl2, status: "+(string)status);
         }
     }
 
