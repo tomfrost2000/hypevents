@@ -49,6 +49,8 @@ key httpRequest;
 
 list events;
 
+list eventIndices;
+
 integer channel;
 
 integer listenHandle;
@@ -135,6 +137,8 @@ string tfTrimText(string in, string fontname, integer fontsize,integer width)
 refreshTexture()
 {
     string commandList = "";
+    
+    eventIndices = [];
 
     integer themeIdx = llListFindList(themes, theme);
     string backgroundColor = llList2String(themes, themeIdx + 1);
@@ -174,6 +178,8 @@ refreshTexture()
 
         
         if(showAll || llList2Integer(timeParsed, 2) > notBefore) {
+            eventIndices += i;
+            
             commandList = osMovePen(commandList, 10, y + fontSize - hourFontSize);
             commandList = osSetFontName(commandList, hourFontName);
             commandList = osSetFontSize(commandList, hourFontSize);
@@ -279,10 +285,14 @@ default
                 tfLoadURL(avatar);
             } else if(touchY>=startY) {
                 integer touchIndex;
+                integer eventIndex;
 
                 touchIndex = (integer)((touchY - startY) / lineHeight);
-
-                tfGoToEvent(avatar, touchIndex);
+                
+                if(touchIndex < llGetListLength(eventIndices)) {
+                    eventIndex = llList2Integer(eventIndices, touchIndex);
+                    tfGoToEvent(avatar, eventIndex);
+                }
             }
         }
     }
